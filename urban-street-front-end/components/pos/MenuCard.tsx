@@ -14,26 +14,32 @@ export function MenuCard({ item, onAdd }: MenuCardProps) {
   return (
     <button
       onClick={() => onAdd(item)}
+      aria-label={`Add ${item.name} to cart. Price: ${item.price} Baht`}
       className={cn(
-        "flex flex-col justify-between p-5 rounded-[2rem] h-48 w-full text-left transition-all active:scale-95 shadow-sm border border-stone-100 overflow-hidden",
+        "flex flex-col justify-between p-6 rounded-[2.5rem] h-48 w-full text-left transition-all hover:shadow-md active:scale-95 border border-stone-100 overflow-hidden group relative",
         item.color || "bg-stone-100"
       )}
     >
-      <div className="flex justify-between items-start w-full mb-2">
-        <div className="bg-white/40 p-2 rounded-2xl shrink-0">
-          <Coffee size={24} className="opacity-80" />
+      <div className="flex justify-between items-start w-full relative z-10">
+        <div className="bg-white/50 backdrop-blur-sm p-3 rounded-2xl shrink-0 group-hover:scale-110 transition-transform duration-300">
+          <Coffee size={24} className="text-black opacity-70" />
         </div>
-        <span className="bg-white/90 backdrop-blur-md px-3 py-1 rounded-xl text-sm font-black text-black shadow-sm shrink-0">
-          ฿{item.price}
-        </span>
+        <div className="bg-black/90 px-4 py-1.5 rounded-2xl shadow-sm shrink-0">
+          <span className="text-sm font-black text-white tabular-nums">
+            ฿{item.price}
+          </span>
+        </div>
       </div>
       
-      <div className="flex-1 flex flex-col justify-end">
-        <h3 className="text-xl font-black leading-tight mb-1 line-clamp-2 min-h-[3.5rem] flex items-end">
+      <div className="relative z-10 flex flex-col justify-end mt-4">
+        <h3 className="text-lg font-black leading-tight mb-1 line-clamp-2 min-h-[3rem] text-black">
           {item.name}
         </h3>
-        <p className="text-[10px] uppercase tracking-widest font-bold opacity-40">Tap to Add</p>
+        <p className="text-[9px] uppercase tracking-[0.2em] font-black text-black/30 group-hover:text-black/50 transition-colors">Tap to Add</p>
       </div>
+
+      {/* Subtle background glow effect on hover */}
+      <div className="absolute inset-0 bg-white/20 opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
     </button>
   );
 }

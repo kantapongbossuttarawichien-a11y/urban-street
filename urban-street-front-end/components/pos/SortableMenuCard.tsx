@@ -29,7 +29,7 @@ export function SortableMenuCard({ item, onAdd }: Props) {
   };
 
   return (
-    <div ref={setNodeRef} style={style} {...attributes} {...listeners} className="touch-none">
+    <div ref={setNodeRef} style={style} {...attributes} {...listeners} className="touch-none cursor-grab active:cursor-grabbing">
       <MenuCard item={item} onAdd={onAdd} />
     </div>
   );
