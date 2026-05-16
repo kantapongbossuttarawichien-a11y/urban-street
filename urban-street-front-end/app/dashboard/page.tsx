@@ -23,17 +23,20 @@ const containerVariants: Variants = {
   visible: {
     opacity: 1,
     transition: {
-      duration: 0.3
+      duration: 0.2,
+      staggerChildren: 0.06,
     }
   }
 };
 
 const itemVariants: Variants = {
-  hidden: { opacity: 0 },
+  hidden: { opacity: 0, y: 12 },
   visible: {
     opacity: 1,
+    y: 0,
     transition: {
-      duration: 0.3
+      duration: 0.25,
+      ease: [0.25, 0.46, 0.45, 0.94],
     }
   }
 };

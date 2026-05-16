@@ -29,25 +29,27 @@ export function CheckoutBar({ cart, total, onSave, onRemoveItem, isLoading }: Ch
 
   return (
     <>
-      {/* Backdrop when expanded */}
+      {/* Backdrop when expanded — no backdrop-blur for perf */}
       <AnimatePresence>
         {isExpanded && (
           <motion.div
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
+            transition={{ duration: 0.18 }}
             onClick={() => setIsExpanded(false)}
-            className="fixed inset-0 bg-black/40 backdrop-blur-sm z-40"
+            className="fixed inset-0 bg-black/50 z-40"
           />
         )}
       </AnimatePresence>
 
       <motion.div
         initial={{ y: "100%" }}
-        animate={{ y: isExpanded ? 0 : "calc(100% - 130px)" }}
-        transition={{ type: "spring", damping: 30, stiffness: 300 }}
+        animate={{ y: isExpanded ? "0%" : "calc(100% - 130px)" }}
+        transition={{ type: "spring", damping: 32, stiffness: 380, mass: 0.8 }}
+        style={{ willChange: "transform" }}
         className={cn(
-          "fixed bottom-0 left-0 right-0 bg-white shadow-[0_-8px_30px_rgb(0,0,0,0.12)] z-50 rounded-t-[3rem] flex flex-col overflow-hidden",
+          "fixed bottom-0 left-0 right-0 bg-white shadow-[0_-8px_30px_rgb(0,0,0,0.10)] z-50 rounded-t-[3rem] flex flex-col overflow-hidden",
           isExpanded ? "h-[75vh]" : "h-auto"
         )}
       >

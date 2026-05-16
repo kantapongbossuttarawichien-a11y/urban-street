@@ -48,8 +48,8 @@ export function TransactionList({ transactions, onVoid, isLoading, showDate }: T
                 </tr>
               ))
             ) : (
-              transactions.map((tx) => (
-                <tr key={tx.id} className={cn(
+              transactions.map((tx, index) => (
+                <tr key={tx.id ?? index} className={cn(
                   "group hover:bg-stone-50/50 transition-all",
                   tx.status === 'voided' && "opacity-40"
                 )}>
@@ -102,7 +102,7 @@ export function TransactionList({ transactions, onVoid, isLoading, showDate }: T
             )}
             
             {!isLoading && transactions.length === 0 && (
-              <tr>
+              <tr key="empty">
                 <td colSpan={4} className="px-10 py-32 text-center">
                   <p className="text-[10px] font-black text-stone-200 uppercase tracking-[0.3em]">ไม่มีรายการขาย</p>
                 </td>
