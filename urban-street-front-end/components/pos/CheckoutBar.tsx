@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useState, useEffect } from "react";
-import { ShoppingCart, ChevronUp, ChevronDown, Trash2 } from "lucide-react";
+import { ShoppingCart, ChevronUp, Trash2 } from "lucide-react";
 import { MenuItem } from "@/types";
 import { motion, AnimatePresence } from "framer-motion";
 import { cn } from "@/lib/utils";

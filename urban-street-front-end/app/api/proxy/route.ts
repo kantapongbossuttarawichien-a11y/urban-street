@@ -36,9 +36,10 @@ export async function POST(request: Request) {
         { status: 502 }
       );
     }
-  } catch (error: any) {
+  } catch (error: unknown) {
     console.error("Proxy POST Error:", error);
-    return NextResponse.json({ error: "Failed to connect to GAS", details: error.message }, { status: 500 });
+    const message = error instanceof Error ? error.message : String(error);
+    return NextResponse.json({ error: "Failed to connect to GAS", details: message }, { status: 500 });
   }
 }
 
@@ -74,8 +75,9 @@ export async function GET(request: Request) {
         details: text.substring(0, 500) // ส่ง 500 ตัวอักษรแรกไปดูเพื่อประหยัด bandwidth
       }, { status: 500 });
     }
-  } catch (error: any) {
+  } catch (error: unknown) {
     console.error("Proxy GET Error:", error);
-    return NextResponse.json({ error: "Failed to connect to GAS", details: error.message }, { status: 500 });
+    const message = error instanceof Error ? error.message : String(error);
+    return NextResponse.json({ error: "Failed to connect to GAS", details: message }, { status: 500 });
   }
 }

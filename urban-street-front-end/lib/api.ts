@@ -1,4 +1,4 @@
-import { MenuItem, DailyStats, Transaction, SalesRecord, GASResponse } from "@/types";
+import { MenuItem, DailyStats, SalesRecord, GASResponse } from "@/types";
 
 const API_URL = process.env.NEXT_PUBLIC_SHEETY_API_URL || "";
 
@@ -27,7 +27,7 @@ export const sheetyApi = {
       
       if (!menuList) return [];
       
-      return (menuList || []).map((item: any, index: number) => {
+      return (menuList || []).map((item: Record<string, unknown>, index: number) => {
         // Fallback: Use item.id if exists, otherwise try item.row or rowIndex, finally index
         const rawId = item.id !== undefined && item.id !== "" ? item.id : (item.row || item.rowIndex || index + 1);
         const safeId = isNaN(Number(rawId)) ? String(rawId) : Number(rawId);
@@ -59,7 +59,7 @@ export const sheetyApi = {
   /**
    * Records a new order. Currently sends individual requests for each item.
    */
-  async createOrder(items: MenuItem[], total: number): Promise<any[]> {
+  async createOrder(items: MenuItem[]): Promise<unknown[]> {
     if (!API_URL) return [];
     const timestamp = new Date().toISOString();
     
@@ -194,7 +194,7 @@ export const sheetyApi = {
   /**
    * Marks an order as voided.
    */
-  async voidOrder(id: number | string): Promise<any> {
+  async voidOrder(id: number | string): Promise<unknown> {
     if (!API_URL) return null;
 
     try {
@@ -225,7 +225,7 @@ export const sheetyApi = {
   /**
    * Adds a new menu item.
    */
-  async addMenuItem(item: Partial<MenuItem>): Promise<any> {
+  async addMenuItem(item: Partial<MenuItem>): Promise<unknown> {
     if (!API_URL) return null;
 
     try {
@@ -262,8 +262,8 @@ export const sheetyApi = {
    * Sanitizes an updates payload for GAS compatibility.
    * Google Sheets stores booleans as "TRUE"/"FALSE" strings, not JS booleans.
    */
-  _sanitizeForGAS(updates: Record<string, any>): Record<string, any> {
-    const sanitized: Record<string, any> = {};
+  _sanitizeForGAS(updates: Record<string, unknown>): Record<string, unknown> {
+    const sanitized: Record<string, unknown> = {};
     for (const [key, value] of Object.entries(updates)) {
       if (typeof value === "boolean") {
         sanitized[key] = value ? "TRUE" : "FALSE";
@@ -277,12 +277,12 @@ export const sheetyApi = {
   /**
    * Updates an existing menu item.
    */
-  async updateMenuItem(id: number | string, updates: Partial<MenuItem>): Promise<any> {
+  async updateMenuItem(id: number | string, updates: Partial<MenuItem>): Promise<unknown> {
     if (!API_URL) return null;
 
     try {
       // GAS/Sheets requires boolean values as "TRUE"/"FALSE" strings
-      const sanitizedUpdates = this._sanitizeForGAS(updates as Record<string, any>);
+      const sanitizedUpdates = this._sanitizeForGAS(updates as Record<string, unknown>);
 
       const payload = {
         action: "update",
@@ -315,7 +315,7 @@ export const sheetyApi = {
    * Hard deletes a menu item by removing the row from Google Sheets via GAS.
    * Requires the GAS script to support action: "delete".
    */
-  async deleteMenuItem(id: number | string): Promise<any> {
+  async deleteMenuItem(id: number | string): Promise<unknown> {
     if (!API_URL) return null;
 
     try {

@@ -43,7 +43,7 @@ export function usePOS() {
 
     for (const order of queue) {
       try {
-        await sheetyApi.createOrder(order.items, order.total);
+        await sheetyApi.createOrder(order.items);
         successfulCount++;
       } catch (e) {
         remainingQueue.push(order);
@@ -126,7 +126,7 @@ export function usePOS() {
     const orderData = { items: cart, total: total };
 
     try {
-      await sheetyApi.createOrder(orderData.items, orderData.total);
+      await sheetyApi.createOrder(orderData.items);
       setDailyRevenue(prev => prev + total);
       setCart([]);
       

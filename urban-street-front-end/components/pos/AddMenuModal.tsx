@@ -55,7 +55,7 @@ export function AddMenuModal({ isOpen, onClose, onSuccess, onError, maxOrderInde
       setNewPrice("");
       onSuccess();
       onClose();
-    } catch (err) {
+    } catch {
       if (onError) onError("ไม่สามารถเพิ่มเมนูได้");
     } finally {
       setIsLoading(false);

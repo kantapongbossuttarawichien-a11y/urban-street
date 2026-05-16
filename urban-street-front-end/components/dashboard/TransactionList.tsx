@@ -3,7 +3,7 @@
 import React from "react";
 import { Transaction } from "@/types";
 import { cn } from "@/lib/utils";
-import { Trash2, CheckCircle2, XCircle, Clock } from "lucide-react";
+import { Trash2 } from "lucide-react";
 
 interface TransactionListProps {
   transactions: Transaction[];

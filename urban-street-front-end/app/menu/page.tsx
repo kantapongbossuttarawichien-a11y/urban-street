@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useState, useEffect } from "react";
-import { ChevronLeft, Plus, Save, Trash2, Power, Coffee, Tag, Palette, X, Check, GripVertical, CheckCircle2, AlertCircle } from "lucide-react";
+import { ChevronLeft, Plus, Trash2, Power, GripVertical, CheckCircle2, AlertCircle } from "lucide-react";
 import Link from "next/link";
 import { MenuItem } from "@/types";
 import { sheetyApi } from "@/lib/api";
@@ -30,23 +30,7 @@ import { ConfirmModal } from "@/components/pos/ConfirmModal";
 // Remove mock data - using empty array as initial state
 const INITIAL_MENUS: MenuItem[] = [];
 
-const COLOR_OPTIONS = [
-  { name: "Cream", value: "bg-[#F8F5F2]" },
-  { name: "Matcha", value: "bg-[#E7F0DC]" },
-  { name: "Thai Tea", value: "bg-[#FFEDD5]" },
-  { name: "Latte", value: "bg-[#F5E6D3]" },
-  { name: "Cocoa", value: "bg-[#A68A7D] text-white" },
-  { name: "Espresso", value: "bg-[#2D2424] text-white" },
-  { name: "Berry", value: "bg-[#FDE2E4]" },
-  { name: "Lemon", value: "bg-[#FEF9C3]" },
-  { name: "Mint", value: "bg-[#D1FAE5]" },
-  { name: "Sky", value: "bg-[#E0F2FE]" },
-  { name: "Lavender", value: "bg-[#EDE9FE]" },
-  { name: "Honey", value: "bg-[#FEF3C7]" },
-  { name: "Rose", value: "bg-[#FFE4E6]" },
-  { name: "Charcoal", value: "bg-[#4B5563] text-white" },
-  { name: "Midnight", value: "bg-[#111827] text-white" },
-];
+
 
 export default function MenuManagementPage() {
   const [menus, setMenus] = useState<MenuItem[]>(INITIAL_MENUS);
@@ -64,9 +48,7 @@ export default function MenuManagementPage() {
   const nextSyncItems = React.useRef<MenuItem[] | null>(null);
 
   // State สำหรับเมนูใหม่
-  const [newName, setNewName] = useState("");
-  const [newPrice, setNewPrice] = useState("");
-  const [newColor, setNewColor] = useState("bg-stone-200");
+
 
   const sensors = useSensors(
     useSensor(PointerSensor, {
@@ -159,7 +141,7 @@ export default function MenuManagementPage() {
       ));
 
       await sheetyApi.updateMenuItem(item.id, { isActive: !item.isActive });
-    } catch (err) {
+    } catch {
       setErrorMessage("ไม่สามารถอัปเดตสถานะได้");
       setNotificationType("error");
       setShowNotification(true);
@@ -187,7 +169,7 @@ export default function MenuManagementPage() {
       setErrorMessage(""); 
       setShowNotification(true);
       setTimeout(() => setShowNotification(false), 3000);
-    } catch (err) {
+    } catch {
       setErrorMessage("ไม่สามารถลบเมนูได้");
       setNotificationType("error");
       setShowNotification(true);
