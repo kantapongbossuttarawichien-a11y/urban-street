@@ -1,5 +1,5 @@
-import { useState, useEffect, useMemo, useRef } from "react";
-import { MenuItem, DailyStats } from "@/types";
+import { useState, useEffect, useMemo, useRef, useCallback } from "react";
+import { MenuItem } from "@/types";
 import { sheetyApi } from "@/lib/api";
 import { arrayMove } from "@dnd-kit/sortable";
 
@@ -16,25 +16,25 @@ export function usePOS() {
 
   const total = useMemo(() => cart.reduce((acc, item) => acc + item.price, 0), [cart]);
 
-  const fetchMenus = async () => {
+  const fetchMenus = useCallback(async () => {
     try {
       const fetchedMenus = await sheetyApi.getMenus();
       if (fetchedMenus.length > 0) setMenus(fetchedMenus);
     } catch (e) {
       console.error("Fetch menus failed", e);
     }
-  };
+  }, []);
 
-  const fetchStats = async () => {
+  const fetchStats = useCallback(async () => {
     try {
       const stats = await sheetyApi.getDailyStats();
       setDailyRevenue(stats.total);
     } catch (e) {
       console.error("Fetch stats failed", e);
     }
-  };
+  }, []);
 
-  const attemptSync = async (queue: any[]) => {
+  const attemptSync = useCallback(async (queue: { items: MenuItem[] }[]) => {
     if (queue.length === 0) return;
     
     console.log(`Attempting to sync ${queue.length} pending orders...`);
@@ -45,7 +45,8 @@ export function usePOS() {
       try {
         await sheetyApi.createOrder(order.items);
         successfulCount++;
-      } catch (e) {
+      } catch (err) {
+        console.error("Sync failed for order", err);
         remainingQueue.push(order);
       }
     }
@@ -56,7 +57,7 @@ export function usePOS() {
     if (successfulCount > 0) {
       await fetchStats();
     }
-  };
+  }, [fetchStats]);
 
   useEffect(() => {
     const init = async () => {
@@ -72,7 +73,7 @@ export function usePOS() {
       setIsLoading(false);
     };
     init();
-  }, []);
+  }, [fetchMenus, fetchStats, attemptSync]);
 
   const addToCart = (item: MenuItem) => {
     setCart((prev) => [...prev, item]);
@@ -134,7 +135,8 @@ export function usePOS() {
       if (offlineQueue.length > 0) attemptSync(offlineQueue);
       
       return { success: true, total };
-    } catch (error) {
+    } catch (err) {
+      console.error("Order save failed, saving to offline queue", err);
       const offlineQueue = JSON.parse(localStorage.getItem("offline_orders") || "[]");
       offlineQueue.push(orderData);
       localStorage.setItem("offline_orders", JSON.stringify(offlineQueue));

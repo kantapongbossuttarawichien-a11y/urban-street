@@ -1,6 +1,6 @@
 import { useState, useEffect, useMemo } from "react";
 import { sheetyApi } from "@/lib/api";
-import { Transaction, SalesRecord } from "@/types";
+import { Transaction } from "@/types";
 
 export type TimePeriod = "today" | "yesterday" | "7d" | "month";
 
