@@ -27,21 +27,21 @@ export const sheetyApi = {
       
       if (!menuList) return [];
       
-      return (menuList || []).map((item: Record<string, unknown>, index: number) => {
+      return (menuList as unknown as Record<string, unknown>[]).map((item: Record<string, unknown>, index: number) => {
         // Fallback: Use item.id if exists, otherwise try item.row or rowIndex, finally index
         const rawId = item.id !== undefined && item.id !== "" ? item.id : (item.row || item.rowIndex || index + 1);
         const safeId = isNaN(Number(rawId)) ? String(rawId) : Number(rawId);
         
         return {
           id: safeId,
-          name: item.name || "Untitled",
+          name: String(item.name || "Untitled"),
           price: Number(item.price) || 0,
-          color: item.color || "bg-stone-100",
+          color: String(item.color || "bg-stone-100"),
           isActive: item.isActive === undefined ? true : (
             typeof item.isActive === 'boolean' ? item.isActive : String(item.isActive).toUpperCase() === "TRUE"
           ),
           orderIndex: Number(item.orderIndex) || (index + 1),
-        };
+        } as MenuItem;
       }).sort((a: MenuItem, b: MenuItem) => {
         if (a.orderIndex !== b.orderIndex) {
           return (a.orderIndex || 0) - (b.orderIndex || 0);

@@ -37,8 +37,9 @@ export interface DailyStats {
 }
 
 export interface GASResponse<T> {
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  [key: string]: T[] | any;
+  menu?: T[];
+  sales?: T[];
+  data?: T[];
   error?: string;
   details?: string;
 }
