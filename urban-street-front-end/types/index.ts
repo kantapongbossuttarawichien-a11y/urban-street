@@ -37,7 +37,7 @@ export interface DailyStats {
 }
 
 export interface GASResponse<T> {
-  [key: string]: T[] | undefined;
+  [key: string]: any;
   error?: string;
   details?: string;
 }
