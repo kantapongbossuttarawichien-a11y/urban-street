@@ -18,7 +18,7 @@ export function CheckoutBar({ cart, total, onSave, onRemoveItem, isLoading }: Ch
   const [isExpanded, setIsExpanded] = useState(false);
   const itemCount = cart.length;
 
-  // Reset expanded state when cart is empty
+  // Reset expanded state when cart is empty tst
   useEffect(() => {
     if (itemCount === 0) {
       setIsExpanded(false);
