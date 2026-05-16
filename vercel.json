@@ -1,6 +1,3 @@
 {
-  "buildCommand": "cd urban-street-front-end && npm install && npm run build",
-  "outputDirectory": "urban-street-front-end/.next",
-  "installCommand": "cd urban-street-front-end && npm install",
   "framework": "nextjs"
 }
