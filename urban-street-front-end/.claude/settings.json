@@ -1,0 +1,8 @@
+{
+  "permissions": {
+    "allow": ["Bash(git mv:*)"]
+  },
+  "enabledPlugins": {
+    "feature-dev@claude-code-plugins": true
+  }
+}
