@@ -1,0 +1,8 @@
+{
+  "name": "urban-street-root",
+  "private": true,
+  "scripts": {
+    "build": "cd urban-street-front-end && npm install && npm run build",
+    "install": "cd urban-street-front-end && npm install"
+  }
+}
