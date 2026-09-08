@@ -71,7 +71,7 @@ html.pwa-standalone body { touch-action: pan-x pan-y; }
 main > header { padding-top: max(24px, env(safe-area-inset-top, 0px)); }
 body:has(.app-navigation) { padding-bottom: var(--app-nav-height); }
 .modal-open { overflow: hidden; overscroll-behavior: none; }
-.app-modal-layer { position: fixed; inset: 0; z-index: 1000; min-height: 100dvh; padding: max(16px, env(safe-area-inset-top, 0px)) max(16px, env(safe-area-inset-right, 0px)) max(16px, env(safe-area-inset-bottom, 0px)) max(16px, env(safe-area-inset-left, 0px)); }
+.app-modal-layer { position: fixed; inset: 0; z-index: 1000; min-height: 100dvh; padding: max(16px, env(safe-area-inset-top, 0px)) max(16px, env(safe-area-inset-right, 0px)) max(16px, env(safe-area-inset-bottom, 0px)) max(16px, env(safe-area-inset-left, 0px)); background: rgb(28 25 23 / 0.6); backdrop-filter: blur(4px); }
 .app-navigation { position: fixed; bottom: 0; left: 0; right: 0; z-index: 35; display: flex; justify-content: center; gap: 6px; padding: 6px max(12px, env(safe-area-inset-right, 0px)) calc(6px + env(safe-area-inset-bottom, 0px)) max(12px, env(safe-area-inset-left, 0px)); background: rgb(255 255 255 / 96%); border-top: 1px solid #e7e5e4; backdrop-filter: blur(16px); }
 .app-tab { min-height: 56px; max-width: 180px; flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 2px; color: #57534e; font-size: 12px; font-weight: 500; border-radius: 16px; text-decoration: none; }
 .app-tab-icon { padding: 3px 16px; border-radius: 12px; }
@@ -105,4 +105,18 @@ button:focus-visible, a:focus-visible { outline: 3px solid #78716c; outline-offs
   textarea {
     font-size: 16px !important;
   }
+}
+
+
+/* Hide scrollbars while preserving normal touch and mouse scrolling. */
+*,
+*::before,
+*::after {
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+}
+*::-webkit-scrollbar {
+  display: none;
+  width: 0;
+  height: 0;
 }
