@@ -77,7 +77,7 @@ export function AddMenuModal({ isOpen, onClose, onSuccess, onError, maxOrderInde
           type="button"
           onClick={onClose}
           aria-label="Close modal"
-          className="absolute inset-0 bg-stone-900/60 backdrop-blur-sm"
+          className="absolute inset-0"
         />
           
         <motion.div 
