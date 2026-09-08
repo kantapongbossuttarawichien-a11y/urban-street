@@ -156,7 +156,7 @@ export function AddMenuModal({ isOpen, onClose, onSuccess, onError, maxOrderInde
                   <Palette size={14} strokeWidth={2.5} />
                   เลือกธีมสี
                 </label>
-                <div className="flex overflow-x-auto py-2 gap-3 no-scrollbar -mx-1 px-1">
+                <div className="grid grid-cols-5 gap-3 py-2">
                   {COLOR_OPTIONS.map((option) => (
                     <button
                       key={option.value}
@@ -164,7 +164,7 @@ export function AddMenuModal({ isOpen, onClose, onSuccess, onError, maxOrderInde
                       onClick={() => setNewColor(option.value)}
                       aria-label={`Select color ${option.name}`}
                       aria-pressed={newColor === option.value}
-                      className={`w-12 h-12 rounded-2xl transition-all flex items-center justify-center shrink-0 border-2 ${
+                      className={`aspect-square min-h-12 w-full rounded-2xl transition-all flex items-center justify-center border-2 ${
                         newColor === option.value 
                           ? 'border-black scale-110 shadow-lg ring-4 ring-black/5' 
                           : 'border-stone-50 scale-100 hover:scale-105 hover:border-stone-200'
