@@ -1,6 +1,8 @@
 import type { Metadata, Viewport } from "next";
 import { Noto_Sans_Thai } from "next/font/google";
 import "./globals.css";
+import { AppNavigation } from "@/components/AppNavigation";
+import { PWAProvider } from "@/components/PWAProvider";
 import { Providers } from "@/components/Providers";
 
 const notoSansThai = Noto_Sans_Thai({
@@ -11,7 +13,9 @@ const notoSansThai = Noto_Sans_Thai({
 
 export const metadata: Metadata = {
   title: "Urban Street | Coffee POS & Analytics",
-  description: "Modern, minimalist coffee sales tracking and analytics for local vendors. Fast, offline-ready, and beautiful.",
+  description: "ขายสินค้า จัดการเมนู และดูรายงานยอดขายสำหรับร้าน Urban Street",
+  manifest: "/manifest.webmanifest",
+  icons: { icon: "/icons/icon-192.png", apple: "/icons/apple-touch-icon.png" },
   keywords: ["coffee", "pos", "sales tracker", "analytics", "urban street", "cafe"],
   authors: [{ name: "Urban Street Team" }],
   appleWebApp: {
@@ -28,8 +32,7 @@ export const viewport: Viewport = {
   themeColor: "#ffffff",
   width: "device-width",
   initialScale: 1,
-  maximumScale: 1,
-  userScalable: false,
+  viewportFit: "cover",
 };
 
 export default function RootLayout({
@@ -43,7 +46,7 @@ export default function RootLayout({
       className={`${notoSansThai.variable} h-full antialiased font-sans selection:bg-stone-200`}
     >
       <body className="min-h-full flex flex-col bg-white">
-        <Providers>{children}</Providers>
+        <Providers><PWAProvider />{children}<AppNavigation /></Providers>
       </body>
     </html>
   );

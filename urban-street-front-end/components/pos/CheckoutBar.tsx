@@ -45,12 +45,12 @@ export function CheckoutBar({ cart, total, onSave, onRemoveItem, isLoading }: Ch
 
       <motion.div
         initial={{ y: "100%" }}
-        animate={{ y: isExpanded ? "0%" : "calc(100% - 130px)" }}
+        animate={{ y: 0 }}
         transition={{ type: "spring", damping: 32, stiffness: 380, mass: 0.8 }}
         style={{ willChange: "transform" }}
         className={cn(
-          "fixed bottom-0 left-0 right-0 bg-white shadow-[0_-8px_30px_rgb(0,0,0,0.10)] z-50 rounded-t-[3rem] flex flex-col overflow-hidden",
-          isExpanded ? "h-[75vh]" : "h-auto"
+          "checkout-sheet fixed left-0 right-0 bg-white shadow-[0_-8px_30px_rgb(0,0,0,0.10)] z-50 rounded-t-[3rem] flex flex-col overflow-hidden",
+          isExpanded ? "h-[65dvh]" : "h-auto"
         )}
       >
         {/* Pull Handle / Toggle Header */}
@@ -68,9 +68,9 @@ export function CheckoutBar({ cart, total, onSave, onRemoveItem, isLoading }: Ch
           )}
         </div>
 
-        <div className="px-10 pb-10 flex flex-col h-full">
+        <div className="px-5 pb-4 flex flex-col h-full">
           {/* Main Info Bar */}
-          <div className="flex gap-6 items-center mb-6">
+          <div className="flex gap-3 items-center mb-3">
             <div className="flex-1">
               <p className="text-[10px] text-stone-400 font-black uppercase tracking-widest mb-1">ยอดรวม ({itemCount} แก้ว)</p>
               <div className="flex items-baseline gap-2">
@@ -84,7 +84,7 @@ export function CheckoutBar({ cart, total, onSave, onRemoveItem, isLoading }: Ch
                 onSave();
               }}
               disabled={isLoading}
-              className="bg-[#e4ff00] hover:bg-[#d4ee00] text-black flex items-center gap-3 px-8 h-16 rounded-2xl disabled:opacity-50 transition-all active:scale-95 shadow-lg shadow-[#e4ff00]/20 group"
+              className="bg-[#e4ff00] hover:bg-[#d4ee00] text-black flex items-center gap-3 px-4 h-14 rounded-2xl disabled:opacity-50 transition-all active:scale-95 shadow-lg shadow-[#e4ff00]/20 group"
             >
               <span className="text-base font-black uppercase tracking-tight">
                 {isLoading ? "กำลังบันทึก..." : "บันทึกการขาย"}

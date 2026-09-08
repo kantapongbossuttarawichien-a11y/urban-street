@@ -43,7 +43,7 @@ export function Header({ dailyRevenue, isLoading }: HeaderProps) {
         <nav className="flex items-center gap-1" aria-label="Main Navigation">
           <Link 
             href="/dashboard" 
-            className="p-2.5 rounded-2xl hover:bg-stone-50 transition-colors text-stone-600 hover:text-black" 
+            className="hidden md:block p-2.5 rounded-2xl hover:bg-stone-50 transition-colors text-stone-600 hover:text-black"
             aria-label="View Analytics Dashboard"
             title="Dashboard"
           >
@@ -51,14 +51,17 @@ export function Header({ dailyRevenue, isLoading }: HeaderProps) {
           </Link>
           <Link 
             href="/menu" 
-            className="p-2.5 rounded-2xl hover:bg-stone-50 transition-colors text-stone-600 hover:text-black" 
+            className="hidden md:block p-2.5 rounded-2xl hover:bg-stone-50 transition-colors text-stone-600 hover:text-black"
             aria-label="Manage Menu Items"
             title="Manage Menu"
           >
             <Settings size={22} strokeWidth={1.5} />
           </Link>
           <button 
-            onClick={() => signOut()}
+            onClick={() => {
+              try { sessionStorage.removeItem('urban-cart'); } catch { /* Storage may be disabled. */ }
+              void signOut();
+            }}
             className="p-2.5 rounded-2xl hover:bg-red-50 text-stone-400 hover:text-red-600 transition-colors ml-1"
             aria-label="Sign out of the application"
             title="ออกจากระบบ"
