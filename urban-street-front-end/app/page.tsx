@@ -84,7 +84,7 @@ export default function POSPage() {
     <main className="flex flex-col min-h-screen bg-background text-foreground font-sans selection:bg-stone-200">
       <Header dailyRevenue={dailyRevenue} isLoading={isLoading} />
 
-      <section className="flex-1 p-6 pb-40">
+      <section className="flex-1 p-6 pb-64">
         {pendingSyncCount > 0 && (
           <div className="mb-6 bg-amber-50 border border-amber-200 p-4 rounded-2xl flex justify-between items-center animate-in fade-in slide-in-from-top-4 duration-500">
             <div className="flex items-center gap-3">
@@ -96,7 +96,7 @@ export default function POSPage() {
                   มี {pendingSyncCount} ออเดอร์ค้างในเครื่อง (ออฟไลน์)
                 </p>
                 <p className="text-[10px] font-medium text-amber-600 uppercase tracking-widest">
-                  จะ Sync ทันทีที่เน็ตกลับมา
+                  เปิดหน้าขายอีกครั้งเมื่อเน็ตกลับมาเพื่อส่งรายการ
                 </p>
               </div>
             </div>

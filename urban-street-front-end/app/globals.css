@@ -62,3 +62,26 @@ html {
     transition-duration: 200ms;
   }
 }
+
+/* Shared native-style shell, including iPhone home indicator and landscape insets. */
+:root { --app-nav-height: calc(76px + env(safe-area-inset-bottom, 0px)); }
+body { min-height: 100dvh; padding-left: env(safe-area-inset-left, 0px); padding-right: env(safe-area-inset-right, 0px); }
+main > header { padding-top: max(24px, env(safe-area-inset-top, 0px)); }
+body:has(.app-navigation) { padding-bottom: var(--app-nav-height); }
+.app-navigation { position: fixed; bottom: 0; left: 0; right: 0; z-index: 35; display: flex; justify-content: center; gap: 8px; padding: 8px max(16px, env(safe-area-inset-right, 0px)) calc(8px + env(safe-area-inset-bottom, 0px)) max(16px, env(safe-area-inset-left, 0px)); background: rgb(255 255 255 / 96%); border-top: 1px solid #e7e5e4; backdrop-filter: blur(16px); }
+.app-tab { min-height: 60px; max-width: 180px; flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 3px; color: #57534e; font-size: 14px; font-weight: 500; border-radius: 18px; text-decoration: none; }
+.app-tab-icon { padding: 4px 20px; border-radius: 14px; }
+.app-tab[aria-current="page"] { color: #171717; font-weight: 700; }
+.app-tab[aria-current="page"] .app-tab-icon { background: #e4ff00; }
+.app-tab:active { background: #f5f5f4; }
+button, a { touch-action: manipulation; -webkit-tap-highlight-color: transparent; }
+button:focus-visible, a:focus-visible { outline: 3px solid #78716c; outline-offset: 3px; }
+.checkout-sheet { bottom: var(--app-nav-height); }
+.pwa-status { padding: 12px 20px; background: #fef3c7; color: #78350f; font-size: 14px; }
+.pwa-status button { margin-left: 12px; text-decoration: underline; font-weight: 700; }
+.pwa-install { display: flex; align-items: center; gap: 12px; padding: 12px 16px; background: #f5f5f4; font-size: 14px; }
+.pwa-install img { border-radius: 10px; }
+.pwa-install div { flex: 1; }
+.pwa-install p { color: #57534e; margin: 2px 0 0; }
+.pwa-install button { min-height: 44px; min-width: 44px; padding: 8px; font-weight: 700; }
+@media (prefers-reduced-motion: reduce) { html { scroll-behavior: auto; } *, *::before, *::after { animation-duration: .01ms !important; transition-duration: .01ms !important; } }

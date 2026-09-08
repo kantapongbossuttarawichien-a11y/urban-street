@@ -6,6 +6,18 @@ import { arrayMove } from "@dnd-kit/sortable";
 export function usePOS() {
   const [menus, setMenus] = useState<MenuItem[]>([]);
   const [cart, setCart] = useState<MenuItem[]>([]);
+  const [cartReady, setCartReady] = useState(false);
+  useEffect(() => {
+    try {
+      const saved = JSON.parse(sessionStorage.getItem('urban-cart') || '[]');
+      if (Array.isArray(saved) && saved.every(item => item && typeof item.name === 'string' && typeof item.price === 'number')) setCart(saved);
+    } catch { /* Ignore unavailable storage or an invalid draft. */ }
+    setCartReady(true);
+  }, []);
+  useEffect(() => {
+    if (!cartReady) return;
+    try { sessionStorage.setItem('urban-cart', JSON.stringify(cart)); } catch { /* Keep the in-memory cart usable. */ }
+  }, [cart, cartReady]);
   const [dailyRevenue, setDailyRevenue] = useState(0);
   const [isLoading, setIsLoading] = useState(true);
   const [pendingSyncCount, setPendingSyncCount] = useState(0);
