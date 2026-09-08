@@ -21,6 +21,17 @@ export function PWAProvider() {
     const installed = () => { setInstall(null); setIos(false); };
     const standalone = window.matchMedia('(display-mode: standalone)').matches ||
       (navigator as Navigator & { standalone?: boolean }).standalone;
+    const preventGesture = (event: Event) => event.preventDefault();
+    const preventPinch = (event: TouchEvent) => {
+      if (event.touches.length > 1) event.preventDefault();
+    };
+    if (standalone) {
+      document.documentElement.classList.add('pwa-standalone');
+      document.addEventListener('gesturestart', preventGesture, { passive: false });
+      document.addEventListener('gesturechange', preventGesture, { passive: false });
+      document.addEventListener('gestureend', preventGesture, { passive: false });
+      document.addEventListener('touchmove', preventPinch, { passive: false });
+    }
     setIos(!standalone && (/iPad|iPhone|iPod/.test(navigator.userAgent) ||
       (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1)));
     try { setDismissed(sessionStorage.getItem('urban-install-dismissed') === '1'); } catch { setDismissed(false); }
@@ -47,6 +58,13 @@ export function PWAProvider() {
       window.removeEventListener('offline', syncConnection);
       window.removeEventListener('beforeinstallprompt', onInstall);
       window.removeEventListener('appinstalled', installed);
+      if (standalone) {
+        document.documentElement.classList.remove('pwa-standalone');
+        document.removeEventListener('gesturestart', preventGesture);
+        document.removeEventListener('gesturechange', preventGesture);
+        document.removeEventListener('gestureend', preventGesture);
+        document.removeEventListener('touchmove', preventPinch);
+      }
     };
   }, []);
 
