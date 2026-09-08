@@ -49,7 +49,7 @@ export function CheckoutBar({ cart, total, onSave, onRemoveItem, isLoading }: Ch
         transition={{ type: "spring", damping: 32, stiffness: 380, mass: 0.8 }}
         style={{ willChange: "transform" }}
         className={cn(
-          "checkout-sheet fixed left-0 right-0 bg-white shadow-[0_-8px_30px_rgb(0,0,0,0.10)] z-50 rounded-t-[3rem] flex flex-col overflow-hidden",
+          "checkout-sheet fixed left-0 right-0 bg-white shadow-[0_-8px_30px_rgb(0,0,0,0.10)] z-50 rounded-t-3xl sm:rounded-t-[3rem] flex flex-col overflow-hidden",
           isExpanded ? "h-[65dvh]" : "h-auto"
         )}
       >
@@ -68,13 +68,13 @@ export function CheckoutBar({ cart, total, onSave, onRemoveItem, isLoading }: Ch
           )}
         </div>
 
-        <div className="px-5 pb-4 flex flex-col h-full">
+        <div className="px-4 sm:px-5 pb-3 sm:pb-4 flex flex-col h-full">
           {/* Main Info Bar */}
-          <div className="flex gap-3 items-center mb-3">
+          <div className="flex gap-2 sm:gap-3 items-center mb-3">
             <div className="flex-1">
-              <p className="text-[10px] text-stone-400 font-black uppercase tracking-widest mb-1">ยอดรวม ({itemCount} แก้ว)</p>
+              <p className="text-[9px] sm:text-[10px] text-stone-400 font-black uppercase tracking-wide sm:tracking-widest mb-1">ยอดรวม ({itemCount} แก้ว)</p>
               <div className="flex items-baseline gap-2">
-                <span className="text-2xl font-black text-black tracking-tighter">฿ {total.toLocaleString(undefined, { minimumFractionDigits: 2 })}</span>
+                <span className="text-xl sm:text-2xl font-black text-black tracking-tighter">฿ {total.toLocaleString(undefined, { minimumFractionDigits: 2 })}</span>
               </div>
             </div>
             <button
@@ -84,12 +84,13 @@ export function CheckoutBar({ cart, total, onSave, onRemoveItem, isLoading }: Ch
                 onSave();
               }}
               disabled={isLoading}
-              className="bg-[#e4ff00] hover:bg-[#d4ee00] text-black flex items-center gap-3 px-4 h-14 rounded-2xl disabled:opacity-50 transition-all active:scale-95 shadow-lg shadow-[#e4ff00]/20 group"
+              className="bg-[#e4ff00] hover:bg-[#d4ee00] text-black flex items-center gap-2 sm:gap-3 px-3 sm:px-4 h-12 sm:h-14 rounded-xl sm:rounded-2xl disabled:opacity-50 transition-all active:scale-95 shadow-lg shadow-[#e4ff00]/20 group"
             >
-              <span className="text-base font-black uppercase tracking-tight">
+              <span className="text-sm sm:text-base font-black uppercase tracking-tight">
                 {isLoading ? "กำลังบันทึก..." : "บันทึกการขาย"}
               </span>
-              {!isLoading && <ShoppingCart size={22} strokeWidth={2.5} className="group-hover:rotate-12 transition-transform" />}
+              {!isLoading && <ShoppingCart size={19} strokeWidth={2.5} className="sm:hidden group-hover:rotate-12 transition-transform" />}
+              {!isLoading && <ShoppingCart size={22} strokeWidth={2.5} className="hidden sm:block group-hover:rotate-12 transition-transform" />}
               {isLoading && <div className="w-5 h-5 border-2 border-black/20 border-t-black rounded-full animate-spin" />}
             </button>
           </div>
@@ -104,14 +105,14 @@ export function CheckoutBar({ cart, total, onSave, onRemoveItem, isLoading }: Ch
                 className="flex-1 flex flex-col overflow-hidden"
               >
                 <div className="flex items-center justify-between mb-4">
-                  <h3 className="text-lg font-black uppercase tracking-tight">รายละเอียดออเดอร์</h3>
+                  <h3 className="text-base sm:text-lg font-black uppercase tracking-tight">รายละเอียดออเดอร์</h3>
                 </div>
 
                 <div className="flex-1 overflow-y-auto pr-2 -mr-2 space-y-3 pb-20">
                   {cart.map((item, index) => (
                     <div
                       key={`${item.id}-${index}`}
-                      className="flex items-center justify-between p-4 bg-stone-50 rounded-2xl border border-stone-100"
+                      className="flex items-center justify-between p-3 sm:p-4 bg-stone-50 rounded-xl sm:rounded-2xl border border-stone-100"
                     >
                       <div className="flex items-center gap-4">
                         <div className={cn("w-10 h-10 rounded-xl flex items-center justify-center text-black/40", item.color || "bg-stone-200")}>

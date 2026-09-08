@@ -38,16 +38,17 @@ export default function LoginPage() {
   };
 
   return (
-    <main className="flex min-h-screen items-center justify-center bg-[#F8F9FA] p-6">
-      <div className="w-full max-w-md bg-white rounded-[2.5rem] p-10 shadow-2xl shadow-black/5 border border-stone-100 flex flex-col items-center">
-        <div className="bg-amber-400 p-4 rounded-3xl mb-6 shadow-lg shadow-amber-200">
-          <Coffee size={36} className="text-black" />
+    <main className="flex min-h-screen items-center justify-center bg-[#F8F9FA] p-4 sm:p-6">
+      <div className="w-full max-w-md bg-white rounded-3xl sm:rounded-[2.5rem] p-6 sm:p-10 shadow-2xl shadow-black/5 border border-stone-100 flex flex-col items-center">
+        <div className="bg-amber-400 p-3 sm:p-4 rounded-2xl sm:rounded-3xl mb-5 sm:mb-6 shadow-lg shadow-amber-200">
+          <Coffee size={30} className="text-black sm:hidden" />
+          <Coffee size={36} className="text-black hidden sm:block" />
         </div>
         
-        <h1 className="text-3xl font-black tracking-tight text-black mb-2">
+        <h1 className="text-2xl sm:text-3xl font-black tracking-tight text-black mb-2">
           Coffee Tracker
         </h1>
-        <p className="text-stone-500 mb-8 text-sm text-center leading-relaxed">
+        <p className="text-stone-500 mb-6 sm:mb-8 text-sm text-center leading-relaxed">
           เข้าสู่ระบบเพื่อเริ่มบันทึกยอดขายของคุณ<br/>
           <span className="text-[10px] font-bold text-stone-300 uppercase tracking-widest mt-2 block">
             Admin Login: admin / admin1234
@@ -67,7 +68,7 @@ export default function LoginPage() {
                 onChange={(e) => setEmail(e.target.value)}
                 placeholder="admin"
                 required
-                className="w-full bg-stone-50 border border-stone-100 rounded-2xl py-4 pl-12 pr-4 text-sm focus:bg-white focus:border-amber-400 focus:ring-4 focus:ring-amber-400/10 outline-none transition-all"
+                className="w-full bg-stone-50 border border-stone-100 rounded-xl sm:rounded-2xl py-3.5 sm:py-4 pl-11 sm:pl-12 pr-4 text-sm focus:bg-white focus:border-amber-400 focus:ring-4 focus:ring-amber-400/10 outline-none transition-all"
               />
             </div>
           </div>
@@ -84,7 +85,7 @@ export default function LoginPage() {
                 onChange={(e) => setPassword(e.target.value)}
                 placeholder="••••••••"
                 required
-                className="w-full bg-stone-50 border border-stone-100 rounded-2xl py-4 pl-12 pr-4 text-sm focus:bg-white focus:border-amber-400 focus:ring-4 focus:ring-amber-400/10 outline-none transition-all"
+                className="w-full bg-stone-50 border border-stone-100 rounded-xl sm:rounded-2xl py-3.5 sm:py-4 pl-11 sm:pl-12 pr-4 text-sm focus:bg-white focus:border-amber-400 focus:ring-4 focus:ring-amber-400/10 outline-none transition-all"
               />
             </div>
           </div>
@@ -98,7 +99,7 @@ export default function LoginPage() {
           <button
             type="submit"
             disabled={isLoading}
-            className="w-full bg-black text-white font-bold py-4 rounded-2xl shadow-xl shadow-black/10 hover:bg-stone-800 active:scale-[0.98] transition-all disabled:opacity-50 disabled:active:scale-100 flex items-center justify-center gap-2"
+            className="w-full bg-black text-white font-bold py-3.5 sm:py-4 rounded-xl sm:rounded-2xl shadow-xl shadow-black/10 hover:bg-stone-800 active:scale-[0.98] transition-all disabled:opacity-50 disabled:active:scale-100 flex items-center justify-center gap-2"
           >
             {isLoading ? (
               <div className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin" />
@@ -108,7 +109,7 @@ export default function LoginPage() {
           </button>
         </form>
 
-        <p className="mt-10 text-[10px] text-stone-400 font-bold uppercase tracking-[0.2em]">
+        <p className="mt-7 sm:mt-10 text-[10px] text-stone-400 font-bold uppercase tracking-[0.15em] sm:tracking-[0.2em]">
           Simple • Fast • Reliable
         </p>
       </div>

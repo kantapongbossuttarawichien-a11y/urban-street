@@ -13,20 +13,20 @@ export function TopItemsChart({ data, isLoading }: TopItemsChartProps) {
   const maxCount = Math.max(...data.map(d => d.count), 1);
 
   return (
-    <div className="bg-white p-10 rounded-[3rem] border border-stone-100 shadow-sm relative overflow-hidden h-full">
-      <div className="flex justify-between items-start mb-8">
+    <div className="bg-white p-5 sm:p-10 rounded-3xl sm:rounded-[3rem] border border-stone-100 shadow-sm relative overflow-hidden h-full">
+      <div className="flex justify-between items-start mb-5 sm:mb-8">
         <div>
           <h4 className="text-sm font-black uppercase tracking-[0.1em] text-black">เมนูขายดี</h4>
-          <p className="text-[10px] font-bold text-stone-300 uppercase tracking-tighter mt-1">5 อันดับที่ลูกค้าเลือกมากที่สุด</p>
+          <p className="text-[9px] sm:text-[10px] font-bold text-stone-300 uppercase tracking-tighter mt-1">5 อันดับที่ลูกค้าเลือกมากที่สุด</p>
         </div>
       </div>
 
-      <div className="space-y-6">
+      <div className="space-y-4 sm:space-y-6">
         {isLoading ? (
           Array.from({ length: 5 }).map((_, i) => (
             <div key={i} className="space-y-3">
               <div className="h-3 bg-stone-50 animate-pulse rounded-full w-24" />
-              <div className="h-6 bg-stone-50 animate-pulse rounded-full w-full" />
+              <div className="h-5 sm:h-6 bg-stone-50 animate-pulse rounded-full w-full" />
             </div>
           ))
         ) : (

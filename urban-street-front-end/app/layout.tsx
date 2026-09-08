@@ -1,9 +1,9 @@
 import type { Metadata, Viewport } from "next";
 import { Noto_Sans_Thai } from "next/font/google";
 import "./globals.css";
-import { AppNavigation } from "@/components/AppNavigation";
 import { PWAProvider } from "@/components/PWAProvider";
 import { Providers } from "@/components/Providers";
+import { NativeAppShell } from "@/components/NativeAppShell";
 
 const notoSansThai = Noto_Sans_Thai({
   variable: "--font-noto-sans-thai",
@@ -20,7 +20,7 @@ export const metadata: Metadata = {
   authors: [{ name: "Urban Street Team" }],
   appleWebApp: {
     capable: true,
-    statusBarStyle: "default",
+    statusBarStyle: "black-translucent",
     title: "Urban Street",
   },
   formatDetection: {
@@ -29,7 +29,10 @@ export const metadata: Metadata = {
 };
 
 export const viewport: Viewport = {
-  themeColor: "#ffffff",
+  themeColor: [
+    { media: "(prefers-color-scheme: light)", color: "#ffffff" },
+    { media: "(prefers-color-scheme: dark)", color: "#ffffff" },
+  ],
   width: "device-width",
   initialScale: 1,
   viewportFit: "cover",
@@ -46,7 +49,7 @@ export default function RootLayout({
       className={`${notoSansThai.variable} h-full antialiased font-sans selection:bg-stone-200`}
     >
       <body className="min-h-full flex flex-col bg-white">
-        <Providers><PWAProvider />{children}<AppNavigation /></Providers>
+        <Providers><PWAProvider /><NativeAppShell>{children}</NativeAppShell></Providers>
       </body>
     </html>
   );

@@ -1,35 +1,36 @@
-import { useState, useEffect, useMemo } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import { sheetyApi } from "@/lib/api";
-import { Transaction } from "@/types";
+import { useDataCache } from "@/components/DataCacheProvider";
+import { useNativeNavigation } from "@/components/NativeNavigationContext";
 
 export type TimePeriod = "today" | "yesterday" | "7d" | "month";
 
 export function useDashboard() {
+  const { activeTab } = useNativeNavigation();
+  const {
+    sales,
+    isSalesInitialLoading,
+    refreshSales,
+    invalidateDailyStats,
+  } = useDataCache();
   const [period, setPeriod] = useState<TimePeriod>("today");
-  const [sales, setSales] = useState<Transaction[]>([]);
-  const [isLoading, setIsLoading] = useState(true);
 
-  const fetchSales = async () => {
-    setIsLoading(true);
-    try {
-      const allSales = await sheetyApi.getAllSales();
-      setSales(allSales as unknown as Transaction[]);
-    } catch (error) {
-      console.error("Failed to fetch sales", error);
-    } finally {
-      setIsLoading(false);
-    }
-  };
+  const fetchSales = useCallback(
+    () => refreshSales({ force: true }),
+    [refreshSales],
+  );
 
   useEffect(() => {
-    fetchSales();
-  }, []);
+    if (activeTab !== "dashboard") return;
+    void refreshSales();
+  }, [activeTab, refreshSales]);
 
-  const handleVoid = async (id: number) => {
+  const handleVoid = async (id: number | string) => {
     if (!confirm("Are you sure you want to void this transaction?")) return;
-    
+
     try {
       await sheetyApi.voidOrder(id);
+      invalidateDailyStats();
       await fetchSales();
     } catch (error) {
       console.error("Void failed", error);
@@ -39,101 +40,103 @@ export function useDashboard() {
 
   const filteredSales = useMemo(() => {
     const now = new Date();
-    const todayStr = now.toLocaleDateString('en-CA', { timeZone: 'Asia/Bangkok' });
-    const today = new Date(todayStr);
-    
-    return sales.filter((s) => {
-      if (!s.timestamp) return false;
-      const saleDate = new Date(s.timestamp);
-      const saleDateBangkokStr = saleDate.toLocaleDateString('en-CA', { timeZone: 'Asia/Bangkok' });
-      const saleDateBangkok = new Date(saleDateBangkokStr);
-      
+    const todayStr = now.toLocaleDateString("en-CA", { timeZone: "Asia/Bangkok" });
+
+    const yesterday = new Date(now);
+    yesterday.setDate(yesterday.getDate() - 1);
+    const yesterdayStr = yesterday.toLocaleDateString("en-CA", { timeZone: "Asia/Bangkok" });
+
+    const sevenDaysAgo = new Date(now);
+    sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 6);
+    const sevenDaysAgoStr = sevenDaysAgo.toLocaleDateString("en-CA", { timeZone: "Asia/Bangkok" });
+
+    const [currentYear, currentMonthStr] = todayStr.split("-");
+    const currentMonth = Number(currentMonthStr);
+
+    return sales.filter((sale) => {
+      if (!sale.timestamp) return false;
+      const saleDateObj = new Date(sale.timestamp);
+      if (isNaN(saleDateObj.getTime())) return false;
+
+      const saleDateBangkokStr = saleDateObj.toLocaleDateString("en-CA", { timeZone: "Asia/Bangkok" });
+
       switch (period) {
         case "today":
-          return saleDateBangkok.getTime() === today.getTime();
-        case "yesterday": {
-          const yesterday = new Date(today);
-          yesterday.setDate(yesterday.getDate() - 1);
-          return saleDateBangkok.getTime() === yesterday.getTime();
-        }
-        case "7d": {
-          const sevenDaysAgo = new Date(today);
-          sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 6);
-          return saleDateBangkok >= sevenDaysAgo && saleDateBangkok <= today;
-        }
+          return saleDateBangkokStr === todayStr;
+        case "yesterday":
+          return saleDateBangkokStr === yesterdayStr;
+        case "7d":
+          return saleDateBangkokStr >= sevenDaysAgoStr && saleDateBangkokStr <= todayStr;
         case "month": {
-          return saleDateBangkok.getMonth() === today.getMonth() && 
-                 saleDateBangkok.getFullYear() === today.getFullYear();
+          const [saleYear, saleMonthStr] = saleDateBangkokStr.split("-");
+          return Number(saleMonthStr) === currentMonth && saleYear === currentYear;
         }
-        default:
-          return false;
       }
     });
-  }, [sales, period]);
+  }, [period, sales]);
 
   const metrics = useMemo(() => {
-    const completed = filteredSales.filter(s => s.status !== 'voided');
-    const revenue = completed.reduce((acc, s) => acc + (Number(s.total) || 0), 0);
+    const completed = filteredSales.filter((sale) => sale.status !== "voided");
+    const revenue = completed.reduce((accumulator, sale) => accumulator + (Number(sale.total) || 0), 0);
     const cupCount = completed.length;
-    
-    const orderGroups = new Set(completed.map(s => s.timestamp));
-    const orderCount = orderGroups.size;
-    
+    const orderCount = new Set(completed.map((sale) => sale.timestamp)).size;
     const aov = orderCount > 0 ? revenue / orderCount : 0;
 
-    return {
-      revenue,
-      cupCount,
-      orderCount,
-      aov,
-      completed,
-      allFiltered: filteredSales
-    };
+    return { revenue, cupCount, orderCount, aov, completed, allFiltered: filteredSales };
   }, [filteredSales]);
 
   const rushHourData = useMemo(() => {
     const hours = ["06:00", "07:00", "08:00", "09:00", "10:00", "11:00", "12:00+"];
-    const counts = hours.reduce((acc, h) => ({ ...acc, [h]: 0 }), {} as Record<string, number>);
+    const counts: Record<string, number> = {
+      "06:00": 0, "07:00": 0, "08:00": 0, "09:00": 0, "10:00": 0, "11:00": 0, "12:00+": 0,
+    };
 
-    metrics.completed.forEach((s) => {
-      const date = new Date(s.timestamp);
-      const hour = parseInt(date.toLocaleTimeString('en-US', { timeZone: 'Asia/Bangkok', hour12: false, hour: '2-digit' }));
-      
-      if (hour === 6) counts["06:00"]++;
-      else if (hour === 7) counts["07:00"]++;
-      else if (hour === 8) counts["08:00"]++;
-      else if (hour === 9) counts["09:00"]++;
-      else if (hour === 10) counts["10:00"]++;
-      else if (hour === 11) counts["11:00"]++;
-      else if (hour >= 12) counts["12:00+"]++;
+    metrics.completed.forEach((sale) => {
+      if (!sale.timestamp) return;
+      const dateObj = new Date(sale.timestamp);
+      if (isNaN(dateObj.getTime())) return;
+
+      const hourStr = dateObj.toLocaleTimeString("en-US", {
+        timeZone: "Asia/Bangkok",
+        hour12: false,
+        hour: "2-digit",
+      });
+      const hour = parseInt(hourStr, 10);
+
+      if (!isNaN(hour)) {
+        if (hour >= 6 && hour <= 11) {
+          const key = `${hour.toString().padStart(2, "0")}:00`;
+          if (counts[key] !== undefined) counts[key]++;
+        } else if (hour >= 12) {
+          counts["12:00+"]++;
+        }
+      }
     });
 
-    return hours.map(h => ({ hour: h, count: counts[h] }));
+    return hours.map((hour) => ({ hour, count: counts[hour] }));
   }, [metrics.completed]);
 
   const topItemsData = useMemo(() => {
     const counts: Record<string, number> = {};
-    metrics.completed.forEach((s) => {
-      if (!s.items) return;
-      counts[s.items] = (counts[s.items] || 0) + 1;
+    metrics.completed.forEach((sale) => {
+      if (!sale.items) return;
+      counts[sale.items] = (counts[sale.items] || 0) + 1;
     });
 
     return Object.entries(counts)
       .map(([name, count]) => ({ name, count }))
-      .sort((a, b) => b.count - a.count)
+      .sort((first, second) => second.count - first.count)
       .slice(0, 5);
   }, [metrics.completed]);
-
-  const fastestItem = topItemsData[0];
 
   return {
     period,
     setPeriod,
-    isLoading,
+    isLoading: isSalesInitialLoading,
     metrics,
     rushHourData,
     topItemsData,
-    fastestItem,
+    fastestItem: topItemsData[0],
     handleVoid,
     fetchSales,
   };

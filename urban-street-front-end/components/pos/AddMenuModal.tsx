@@ -3,14 +3,14 @@
 import React, { useState } from "react";
 import { Coffee, Tag, Palette, X, Check, Save } from "lucide-react";
 import { sheetyApi } from "@/lib/api";
-import { motion, AnimatePresence } from "framer-motion";
+import { motion } from "framer-motion";
+import { ModalPortal } from "@/components/common/ModalPortal";
 
 interface AddMenuModalProps {
   isOpen: boolean;
   onClose: () => void;
   onSuccess: () => void;
   onError?: (message: string) => void;
-  currentMenuCount: number;
   maxOrderIndex: number;
 }
 
@@ -40,16 +40,19 @@ export function AddMenuModal({ isOpen, onClose, onSuccess, onError, maxOrderInde
 
   const handleAddMenu = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!newName || !newPrice) return;
+    const trimmedName = newName.trim();
+    const priceNum = Number(newPrice);
+
+    if (!trimmedName || isNaN(priceNum) || priceNum < 0) return;
 
     setIsLoading(true);
     try {
       await sheetyApi.addMenuItem({
-        name: newName,
-        price: Number(newPrice),
+        name: trimmedName,
+        price: priceNum,
         color: newColor,
         isActive: true,
-        orderIndex: maxOrderIndex + 1
+        orderIndex: (Math.max(0, Number(maxOrderIndex) || 0)) + 1
       });
       setNewName("");
       setNewPrice("");
@@ -63,32 +66,37 @@ export function AddMenuModal({ isOpen, onClose, onSuccess, onError, maxOrderInde
   };
 
   return (
-    <AnimatePresence>
-      {isOpen && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 sm:p-6">
-          <motion.div 
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
-            onClick={onClose}
-            className="absolute inset-0 bg-stone-900/60 backdrop-blur-sm"
-          />
+    <ModalPortal isOpen={isOpen}>
+      <motion.div
+        initial={{ opacity: 0 }}
+        animate={{ opacity: 1 }}
+        exit={{ opacity: 0 }}
+        className="app-modal-layer flex items-center justify-center"
+      >
+        <button
+          type="button"
+          onClick={onClose}
+          aria-label="Close modal"
+          className="absolute inset-0 bg-stone-900/60 backdrop-blur-sm"
+        />
           
-          <motion.div 
-            initial={{ opacity: 0, scale: 0.95, y: 20 }}
-            animate={{ opacity: 1, scale: 1, y: 0 }}
-            exit={{ opacity: 0, scale: 0.95, y: 20 }}
-            className="bg-white w-full max-w-md rounded-[3rem] p-8 shadow-2xl relative z-10 overflow-hidden"
-          >
-            <div className="flex justify-between items-center mb-8">
+        <motion.div 
+          initial={{ opacity: 0, scale: 0.95, y: 20 }}
+          animate={{ opacity: 1, scale: 1, y: 0 }}
+          className="bg-white w-full max-w-md max-h-full overflow-y-auto rounded-3xl sm:rounded-[3rem] p-5 sm:p-8 shadow-2xl relative z-10"
+          role="dialog"
+          aria-modal="true"
+          aria-labelledby="add-menu-title"
+        >
+            <div className="flex justify-between items-center mb-5 sm:mb-8">
               <div>
-                <h2 className="text-3xl font-black tracking-tight">เพิ่มเมนูใหม่</h2>
+                <h2 id="add-menu-title" className="text-2xl sm:text-3xl font-black tracking-tight">เพิ่มเมนูใหม่</h2>
                 <p className="text-[10px] font-bold text-stone-400 uppercase tracking-[0.2em] mt-1">Create new item</p>
               </div>
               <button 
                 onClick={onClose}
                 aria-label="Close modal"
-                className="p-3 bg-stone-50 rounded-2xl hover:bg-stone-100 transition-colors text-stone-400 hover:text-black"
+                className="p-2.5 sm:p-3 bg-stone-50 rounded-xl sm:rounded-2xl hover:bg-stone-100 transition-colors text-stone-400 hover:text-black"
               >
                 <X size={24} />
               </button>
@@ -105,13 +113,13 @@ export function AddMenuModal({ isOpen, onClose, onSuccess, onError, maxOrderInde
                   ชื่อรายการ
                 </label>
                 <div className="relative group">
-                  <input 
+                  <input
                     id="menu-name"
                     type="text" 
                     value={newName}
                     onChange={(e) => setNewName(e.target.value)}
                     placeholder="เช่น Espresso, Latte"
-                    className="w-full bg-stone-50 border-2 border-transparent rounded-2xl p-5 pl-14 text-sm font-bold outline-none focus:bg-white focus:border-black transition-all group-hover:bg-stone-100/50"
+                    className="w-full bg-stone-50 border-2 border-transparent rounded-xl sm:rounded-2xl p-4 sm:p-5 pl-12 sm:pl-14 text-sm font-bold outline-none focus:bg-white focus:border-black transition-all group-hover:bg-stone-100/50"
                     required
                     autoFocus
                   />
@@ -135,7 +143,7 @@ export function AddMenuModal({ isOpen, onClose, onSuccess, onError, maxOrderInde
                     value={newPrice}
                     onChange={(e) => setNewPrice(e.target.value)}
                     placeholder="55"
-                    className="w-full bg-stone-50 border-2 border-transparent rounded-2xl p-5 pl-14 text-sm font-bold outline-none focus:bg-white focus:border-black transition-all group-hover:bg-stone-100/50"
+                    className="w-full bg-stone-50 border-2 border-transparent rounded-xl sm:rounded-2xl p-4 sm:p-5 pl-12 sm:pl-14 text-sm font-bold outline-none focus:bg-white focus:border-black transition-all group-hover:bg-stone-100/50"
                     required
                   />
                   <span className="absolute left-5 top-1/2 -translate-y-1/2 text-stone-300 font-black text-xl group-focus-within:text-black transition-colors">฿</span>
@@ -171,18 +179,18 @@ export function AddMenuModal({ isOpen, onClose, onSuccess, onError, maxOrderInde
                 </div>
               </div>
 
-              <div className="flex gap-4 pt-6">
+              <div className="flex gap-3 sm:gap-4 pt-4 sm:pt-6">
                 <button 
                   type="button"
                   onClick={onClose}
-                  className="flex-1 py-5 font-black text-[11px] uppercase tracking-widest text-stone-400 hover:text-black transition-colors"
+                  className="flex-1 py-4 sm:py-5 font-black text-[10px] sm:text-[11px] uppercase tracking-wide sm:tracking-widest text-stone-400 hover:text-black transition-colors"
                 >
                   Cancel
                 </button>
                 <button 
                   type="submit"
                   disabled={isLoading}
-                  className="flex-[2] bg-black text-white py-5 rounded-2xl font-black text-[11px] uppercase tracking-widest flex items-center justify-center gap-3 active:scale-95 transition-all disabled:opacity-50 shadow-xl shadow-black/10 hover:bg-stone-900"
+                  className="flex-[2] bg-black text-white py-4 sm:py-5 rounded-xl sm:rounded-2xl font-black text-[10px] sm:text-[11px] uppercase tracking-wide sm:tracking-widest flex items-center justify-center gap-2 sm:gap-3 active:scale-95 transition-all disabled:opacity-50 shadow-xl shadow-black/10 hover:bg-stone-900"
                 >
                   {isLoading ? (
                     <div className="w-5 h-5 border-2 border-white/20 border-t-white rounded-full animate-spin" />
@@ -195,9 +203,8 @@ export function AddMenuModal({ isOpen, onClose, onSuccess, onError, maxOrderInde
                 </button>
               </div>
             </form>
-          </motion.div>
-        </div>
-      )}
-    </AnimatePresence>
+        </motion.div>
+      </motion.div>
+    </ModalPortal>
   );
 }

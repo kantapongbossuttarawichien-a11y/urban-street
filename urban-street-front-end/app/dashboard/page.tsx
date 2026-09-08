@@ -2,13 +2,11 @@
 
 import React from "react";
 import { 
-  ChevronLeft, 
   TrendingUp, 
   Coffee, 
   ShoppingBag, 
   DollarSign
 } from "lucide-react";
-import Link from "next/link";
 import { cn } from "@/lib/utils";
 import { motion, Variants } from "framer-motion";
 import { MetricCard } from "@/components/dashboard/MetricCard";
@@ -41,6 +39,13 @@ const itemVariants: Variants = {
   }
 };
 
+const TIME_PERIODS: { id: TimePeriod; label: string; fullLabel: string }[] = [
+  { id: "today", label: "วันนี้", fullLabel: "วันนี้" },
+  { id: "yesterday", label: "เมื่อวาน", fullLabel: "เมื่อวาน" },
+  { id: "7d", label: "7 วัน", fullLabel: "7 วันล่าสุด" },
+  { id: "month", label: "เดือนนี้", fullLabel: "เดือนนี้" },
+];
+
 export default function DashboardPage() {
   const {
     period,
@@ -55,43 +60,32 @@ export default function DashboardPage() {
 
   return (
     <main className="min-h-screen bg-white text-black font-sans pb-20 selection:bg-stone-200">
-      <header className="p-6 bg-white sticky top-0 z-20 border-b border-stone-50">
+      <header className="p-4 sm:p-6 bg-white sticky top-0 z-20 border-b border-stone-50">
         <div className="max-w-5xl mx-auto flex items-center justify-between">
-          <div className="flex items-center gap-6">
-            <Link 
-              href="/" 
-              aria-label="Back to POS"
-              className="p-2 rounded-2xl hover:bg-stone-50 transition-colors"
-            >
-              <ChevronLeft size={24} />
-            </Link>
-            <div>
-              <div className="flex items-baseline gap-1">
-                <span className="text-2xl font-black tracking-tight uppercase">URBAN</span>
-                <span className="text-2xl font-medium tracking-tight uppercase text-stone-400">STREET</span>
-              </div>
-              <p className="text-[10px] font-bold text-stone-400 uppercase tracking-widest mt-0.5">Analytics & Dashboard</p>
+          <div>
+            <div className="flex items-baseline gap-1">
+              <span className="text-xl sm:text-2xl font-black tracking-tight uppercase">URBAN</span>
+              <span className="text-xl sm:text-2xl font-medium tracking-tight uppercase text-stone-400">STREET</span>
             </div>
+            <p className="text-[9px] sm:text-[10px] font-bold text-stone-400 uppercase tracking-wide sm:tracking-widest mt-0.5">Analytics & Dashboard</p>
           </div>
           <div className="hidden md:flex items-center gap-2 bg-stone-50 p-1.5 rounded-full border border-stone-100">
-             {(['today', 'yesterday', '7d', 'month'] as TimePeriod[]).map((p) => (
+             {TIME_PERIODS.map(({ id, label }) => (
                <button
-                 key={p}
-                 onClick={() => setPeriod(p)}
+                 key={id}
+                 onClick={() => setPeriod(id)}
                  className={cn(
                    "px-6 py-2 rounded-full text-[10px] font-black uppercase tracking-widest transition-all relative",
-                   period === p ? "text-white" : "text-stone-400 hover:text-stone-600"
+                   period === id ? "text-white" : "text-stone-400 hover:text-stone-600"
                  )}
                >
-                 {period === p && (
+                 {period === id && (
                    <motion.div 
                      layoutId="active-tab"
                      className="absolute inset-0 bg-black rounded-full"
                    />
                  )}
-                 <span className="relative z-10">
-                   {p === "today" ? "วันนี้" : p === "yesterday" ? "เมื่อวาน" : p === "7d" ? "7 วัน" : "เดือนนี้"}
-                 </span>
+                 <span className="relative z-10">{label}</span>
                </button>
              ))}
           </div>
@@ -103,26 +97,26 @@ export default function DashboardPage() {
         initial="hidden"
         animate="visible"
         key={period}
-        className="p-6 max-w-5xl mx-auto space-y-8"
+        className="p-4 sm:p-6 max-w-5xl mx-auto space-y-5 sm:space-y-8"
       >
-        <div className="flex sm:hidden overflow-x-auto gap-3 pb-4 -mx-6 px-6 no-scrollbar">
-          {(['today', 'yesterday', '7d', 'month'] as TimePeriod[]).map((p) => (
-               <button
-                 key={p}
-                 onClick={() => setPeriod(p)}
-                 className={cn(
-                   "px-8 py-3 rounded-full text-[10px] font-black uppercase tracking-widest transition-all whitespace-nowrap shadow-sm",
-                   period === p 
-                    ? "bg-black text-white" 
-                    : "bg-stone-50 text-stone-400 border border-stone-100"
-                 )}
-               >
-                 {p === "today" ? "วันนี้" : p === "yesterday" ? "เมื่อวาน" : p === "7d" ? "7 วันล่าสุด" : "เดือนนี้"}
-               </button>
-             ))}
+        <div className="flex sm:hidden overflow-x-auto gap-2 pb-3 -mx-4 px-4 no-scrollbar">
+          {TIME_PERIODS.map(({ id, fullLabel }) => (
+            <button
+              key={id}
+              onClick={() => setPeriod(id)}
+              className={cn(
+                "px-5 py-2.5 rounded-full text-[10px] font-black uppercase tracking-wide transition-all whitespace-nowrap shadow-sm",
+                period === id 
+                 ? "bg-black text-white" 
+                 : "bg-stone-50 text-stone-400 border border-stone-100"
+              )}
+            >
+              {fullLabel}
+            </button>
+          ))}
         </div>
 
-        <motion.div variants={itemVariants} className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+        <motion.div variants={itemVariants} className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
           <MetricCard 
             title="ยอดขายรวม"
             value={`฿${metrics.revenue.toLocaleString()}`}
@@ -153,7 +147,7 @@ export default function DashboardPage() {
           />
         </motion.div>
 
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 sm:gap-6">
           <motion.div 
             variants={itemVariants} 
             className={cn(
@@ -187,7 +181,7 @@ export default function DashboardPage() {
           )}
         </div>
 
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 sm:gap-6">
           <motion.div variants={itemVariants} className="lg:col-span-1">
             <TopItemsChart data={topItemsData} isLoading={isLoading} />
           </motion.div>

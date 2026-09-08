@@ -7,48 +7,89 @@ const API_URL = process.env.NEXT_PUBLIC_SHEETY_API_URL || "";
  */
 export const sheetyApi = {
   /**
+   * Internal helper to handle proxy GET and POST requests cleanly.
+   */
+  async _fetchProxy<T>(params: {
+    targetUrl?: string;
+    method?: "GET" | "POST";
+    body?: unknown;
+  }): Promise<T | null> {
+    if (!API_URL) {
+      console.warn("SHEETY_API_URL environment variable is not configured.");
+      return null;
+    }
+
+    const method = params.method || (params.body ? "POST" : "GET");
+
+    if (method === "POST") {
+      const response = await fetch("/api/proxy", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          url: params.targetUrl || API_URL,
+          method: "POST",
+          body: params.body,
+        }),
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json().catch(() => ({}));
+        throw new Error(errorData.details || errorData.error || response.statusText);
+      }
+
+      return (await response.json()) as T;
+    } else {
+      const targetUrl = params.targetUrl || API_URL;
+      const response = await fetch(`/api/proxy?url=${encodeURIComponent(targetUrl)}`, {
+        cache: "no-store",
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json().catch(() => ({}));
+        throw new Error(errorData.details || errorData.error || response.statusText);
+      }
+
+      return (await response.json()) as T;
+    }
+  },
+
+  /**
    * Fetches all menu items and sorts them by orderIndex.
    */
   async getMenus(): Promise<MenuItem[]> {
-    if (!API_URL) return [];
-    
     try {
       const url = `${API_URL}?action=get&sheet=menu`;
-      const response = await fetch(`/api/proxy?url=${encodeURIComponent(url)}`);
+      const data = await this._fetchProxy<GASResponse<MenuItem>>({ targetUrl: url, method: "GET" });
       
-      if (!response.ok) {
-        const errorData = await response.json().catch(() => ({}));
-        console.error("Menus fetch failed:", errorData);
-        return [];
-      }
-      
-      const data: GASResponse<MenuItem> = await response.json();
-      const menuList = data.menu;
-      
+      const menuList = data?.menu;
       if (!menuList) return [];
-      
-      return (menuList as unknown as Record<string, unknown>[]).map((item: Record<string, unknown>, index: number) => {
-        // Fallback: Use item.id if exists, otherwise try item.row or rowIndex, finally index
+
+      return (menuList as unknown as Record<string, unknown>[]).map((item, index) => {
         const rawId = item.id !== undefined && item.id !== "" ? item.id : (item.row || item.rowIndex || index + 1);
-        const safeId = isNaN(Number(rawId)) ? String(rawId) : Number(rawId);
-        
+        const safeId = String(rawId);
+
+        const parsedOrderIdx = Number(item.orderIndex);
+        const orderIdx = item.orderIndex !== undefined && item.orderIndex !== "" && !isNaN(parsedOrderIdx)
+          ? parsedOrderIdx
+          : (index + 1);
+
         return {
           id: safeId,
           name: String(item.name || "Untitled"),
-          price: Number(item.price) || 0,
+          price: Math.max(0, Number(item.price) || 0),
           color: String(item.color || "bg-stone-100"),
           isActive: item.isActive === undefined ? true : (
             typeof item.isActive === 'boolean' ? item.isActive : String(item.isActive).toUpperCase() === "TRUE"
           ),
-          orderIndex: Number(item.orderIndex) || (index + 1),
+          orderIndex: orderIdx,
         } as MenuItem;
       }).sort((a: MenuItem, b: MenuItem) => {
         if (a.orderIndex !== b.orderIndex) {
           return (a.orderIndex || 0) - (b.orderIndex || 0);
         }
-        const idA = typeof a.id === 'number' ? a.id : 0;
-        const idB = typeof b.id === 'number' ? b.id : 0;
-        return idA - idB;
+        return String(a.id).localeCompare(String(b.id));
       });
     } catch (error) {
       console.error("sheetyApi.getMenus error:", error);
@@ -57,14 +98,15 @@ export const sheetyApi = {
   },
 
   /**
-   * Records a new order. Currently sends individual requests for each item.
+   * Records a new order by sending items to the sales sheet.
    */
   async createOrder(items: MenuItem[]): Promise<unknown[]> {
-    if (!API_URL) return [];
+    if (!API_URL || !items || items.length === 0) return [];
     const timestamp = new Date().toISOString();
-    
+
     try {
-      const promises = items.map(item => {
+      const results: unknown[] = [];
+      for (const item of items) {
         const payload = {
           action: "add",
           sheet: "sales",
@@ -76,23 +118,14 @@ export const sheetyApi = {
           }
         };
 
-        return fetch("/api/proxy", {
-          method: "POST",
-          body: JSON.stringify({
-            url: API_URL,
-            method: "POST",
-            body: payload
-          }),
-        }).then(res => {
-          if (!res.ok) throw new Error(`Failed to create order item: ${item.name}`);
-          return res.json();
-        });
-      });
+        const res = await this._fetchProxy({ method: "POST", body: payload });
+        results.push(res);
+      }
 
-      return await Promise.all(promises);
+      return results;
     } catch (error) {
       console.error("sheetyApi.createOrder error:", error);
-      throw error; // Re-throw to allow component level handling
+      throw error;
     }
   },
 
@@ -100,20 +133,10 @@ export const sheetyApi = {
    * Fetches daily sales statistics.
    */
   async getDailyStats(): Promise<DailyStats> {
-    if (!API_URL) return { total: 0, count: 0 };
-
     try {
       const url = `${API_URL}?action=get&sheet=sales`;
-      const response = await fetch(`/api/proxy?url=${encodeURIComponent(url)}`);
-      
-      if (!response.ok) {
-        const errorData = await response.json().catch(() => ({}));
-        console.error("Sales stats fetch failed:", errorData);
-        return { total: 0, count: 0 };
-      }
-      
-      const data: GASResponse<SalesRecord> = await response.json();
-      if (!data.sales) return { total: 0, count: 0 };
+      const data = await this._fetchProxy<GASResponse<SalesRecord>>({ targetUrl: url, method: "GET" });
+      if (!data?.sales) return { total: 0, count: 0 };
 
       const today = new Date().toLocaleDateString('en-CA', { timeZone: 'Asia/Bangkok' });
       const todaySales = data.sales.filter((s: SalesRecord) => {
@@ -136,20 +159,10 @@ export const sheetyApi = {
    * Fetches today's sales transactions.
    */
   async getTodaySales(): Promise<SalesRecord[]> {
-    if (!API_URL) return [];
-
     try {
       const url = `${API_URL}?action=get&sheet=sales`;
-      const response = await fetch(`/api/proxy?url=${encodeURIComponent(url)}`);
-      
-      if (!response.ok) {
-        const errorData = await response.json().catch(() => ({}));
-        console.error("Today sales fetch failed:", errorData);
-        return [];
-      }
-      
-      const data: GASResponse<SalesRecord> = await response.json();
-      if (!data.sales) return [];
+      const data = await this._fetchProxy<GASResponse<SalesRecord>>({ targetUrl: url, method: "GET" });
+      if (!data?.sales) return [];
 
       const today = new Date().toLocaleDateString('en-CA', { timeZone: 'Asia/Bangkok' });
       return data.sales
@@ -158,7 +171,7 @@ export const sheetyApi = {
           const saleDate = new Date(s.timestamp).toLocaleDateString('en-CA', { timeZone: 'Asia/Bangkok' });
           return saleDate === today;
         })
-        .sort((a: SalesRecord, b: SalesRecord) => b.id - a.id);
+        .sort((a: SalesRecord, b: SalesRecord) => String(b.id).localeCompare(String(a.id)));
     } catch (error) {
       console.error("sheetyApi.getTodaySales error:", error);
       return [];
@@ -169,22 +182,12 @@ export const sheetyApi = {
    * Fetches all sales records.
    */
   async getAllSales(): Promise<SalesRecord[]> {
-    if (!API_URL) return [];
-
     try {
       const url = `${API_URL}?action=get&sheet=sales`;
-      const response = await fetch(`/api/proxy?url=${encodeURIComponent(url)}`);
-      
-      if (!response.ok) {
-        const errorData = await response.json().catch(() => ({}));
-        console.error("All sales fetch failed:", errorData);
-        return [];
-      }
-      
-      const data: GASResponse<SalesRecord> = await response.json();
-      if (!data.sales) return [];
+      const data = await this._fetchProxy<GASResponse<SalesRecord>>({ targetUrl: url, method: "GET" });
+      if (!data?.sales) return [];
 
-      return data.sales.sort((a: SalesRecord, b: SalesRecord) => b.id - a.id);
+      return data.sales.sort((a: SalesRecord, b: SalesRecord) => String(b.id).localeCompare(String(a.id)));
     } catch (error) {
       console.error("sheetyApi.getAllSales error:", error);
       return [];
@@ -195,8 +198,6 @@ export const sheetyApi = {
    * Marks an order as voided.
    */
   async voidOrder(id: number | string): Promise<unknown> {
-    if (!API_URL) return null;
-
     try {
       const payload = {
         action: "update",
@@ -205,17 +206,7 @@ export const sheetyApi = {
         payload: { status: "voided" }
       };
 
-      const response = await fetch("/api/proxy", {
-        method: "POST",
-        body: JSON.stringify({
-          url: API_URL,
-          method: "POST",
-          body: payload
-        }),
-      });
-      
-      if (!response.ok) throw new Error(`Failed to void order ${id}`);
-      return await response.json();
+      return await this._fetchProxy({ method: "POST", body: payload });
     } catch (error) {
       console.error("sheetyApi.voidOrder error:", error);
       throw error;
@@ -226,10 +217,7 @@ export const sheetyApi = {
    * Adds a new menu item.
    */
   async addMenuItem(item: Partial<MenuItem>): Promise<unknown> {
-    if (!API_URL) return null;
-
     try {
-      // Use a shorter unique ID (Unix timestamp in seconds)
       const newItem = {
         ...item,
         id: item.id || Math.floor(Date.now() / 1000)
@@ -241,17 +229,7 @@ export const sheetyApi = {
         payload: newItem
       };
 
-      const response = await fetch("/api/proxy", {
-        method: "POST",
-        body: JSON.stringify({
-          url: API_URL,
-          method: "POST",
-          body: payload
-        }),
-      });
-      
-      if (!response.ok) throw new Error("Failed to add menu item");
-      return await response.json();
+      return await this._fetchProxy({ method: "POST", body: payload });
     } catch (error) {
       console.error("sheetyApi.addMenuItem error:", error);
       throw error;
@@ -260,7 +238,7 @@ export const sheetyApi = {
 
   /**
    * Sanitizes an updates payload for GAS compatibility.
-   * Google Sheets stores booleans as "TRUE"/"FALSE" strings, not JS booleans.
+   * Google Sheets stores booleans as "TRUE"/"FALSE" strings.
    */
   _sanitizeForGAS(updates: Record<string, unknown>): Record<string, unknown> {
     const sanitized: Record<string, unknown> = {};
@@ -278,12 +256,8 @@ export const sheetyApi = {
    * Updates an existing menu item.
    */
   async updateMenuItem(id: number | string, updates: Partial<MenuItem>): Promise<unknown> {
-    if (!API_URL) return null;
-
     try {
-      // GAS/Sheets requires boolean values as "TRUE"/"FALSE" strings
       const sanitizedUpdates = this._sanitizeForGAS(updates as Record<string, unknown>);
-
       const payload = {
         action: "update",
         sheet: "menu",
@@ -291,20 +265,7 @@ export const sheetyApi = {
         payload: sanitizedUpdates
       };
 
-      const response = await fetch("/api/proxy", {
-        method: "POST",
-        body: JSON.stringify({
-          url: API_URL,
-          method: "POST",
-          body: payload
-        }),
-      });
-      
-      if (!response.ok) {
-        const errorData = await response.json().catch(() => ({}));
-        throw new Error(`Failed to update menu item ${id}: ${errorData.details || response.statusText}`);
-      }
-      return await response.json();
+      return await this._fetchProxy({ method: "POST", body: payload });
     } catch (error) {
       console.error("sheetyApi.updateMenuItem error:", error);
       throw error;
@@ -312,12 +273,9 @@ export const sheetyApi = {
   },
 
   /**
-   * Hard deletes a menu item by removing the row from Google Sheets via GAS.
-   * Requires the GAS script to support action: "delete".
+   * Hard deletes a menu item by removing the row from Google Sheets.
    */
   async deleteMenuItem(id: number | string): Promise<unknown> {
-    if (!API_URL) return null;
-
     try {
       const payload = {
         action: "delete",
@@ -325,20 +283,7 @@ export const sheetyApi = {
         id: id,
       };
 
-      const response = await fetch("/api/proxy", {
-        method: "POST",
-        body: JSON.stringify({
-          url: API_URL,
-          method: "POST",
-          body: payload,
-        }),
-      });
-
-      if (!response.ok) {
-        const errorData = await response.json().catch(() => ({}));
-        throw new Error(`Failed to delete menu item ${id}: ${errorData.details || response.statusText}`);
-      }
-      return await response.json();
+      return await this._fetchProxy({ method: "POST", body: payload });
     } catch (error) {
       console.error("sheetyApi.deleteMenuItem error:", error);
       throw error;

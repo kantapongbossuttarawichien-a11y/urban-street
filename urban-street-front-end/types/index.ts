@@ -8,12 +8,16 @@ export interface MenuItem {
   orderIndex: number;
 }
 
-export interface Order {
-  id: string;
-  createdAt: string;
+export interface SalesRecord {
+  id: number | string;
+  timestamp: string;
+  items: string;
   total: number;
   status: "completed" | "voided";
 }
+
+export type Transaction = SalesRecord;
+export type Order = SalesRecord;
 
 export interface OrderItem {
   id: string;
@@ -21,14 +25,6 @@ export interface OrderItem {
   menuId: string | number;
   qty: number;
   price: number;
-}
-
-export interface Transaction {
-  id: number;
-  timestamp: string;
-  items: string;
-  total: number;
-  status: "completed" | "voided";
 }
 
 export interface DailyStats {
@@ -44,10 +40,8 @@ export interface GASResponse<T> {
   details?: string;
 }
 
-export interface SalesRecord {
-  id: number;
-  timestamp: string;
-  items: string;
-  total: number | string;
-  status: "completed" | "voided";
+export interface OfflineOrder {
+  items: MenuItem[];
+  total: number;
 }
+

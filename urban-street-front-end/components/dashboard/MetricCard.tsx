@@ -28,18 +28,19 @@ export function MetricCard({
 }: MetricCardProps) {
   return (
     <div className={cn(
-      "relative overflow-hidden rounded-[3rem] p-8 bg-white border border-stone-100 shadow-sm transition-all hover:shadow-md group",
+      "relative overflow-hidden rounded-3xl sm:rounded-[3rem] p-4 sm:p-8 bg-white border border-stone-100 shadow-sm transition-all hover:shadow-md group",
       className
     )}>
-      <div className="flex justify-between items-start mb-6">
+      <div className="flex justify-between items-start mb-4 sm:mb-6">
         <div className={cn(
-          "p-4 rounded-[1.5rem] transition-colors",
+          "p-2.5 sm:p-4 rounded-xl sm:rounded-[1.5rem] transition-colors",
           title === "ยอดขายรวม" ? "bg-[#fdf2d8] text-[#856404]" :
           title === "จำนวนแก้ว" ? "bg-[#fce4ec] text-[#d81b60]" :
           title === "จำนวนออเดอร์" ? "bg-[#e3f2fd] text-[#1565c0]" :
           "bg-[#f1f8e9] text-[#33691e]"
         )}>
-          <Icon size={24} strokeWidth={2.5} />
+          <Icon size={20} strokeWidth={2.5} className="sm:hidden" />
+          <Icon size={24} strokeWidth={2.5} className="hidden sm:block" />
         </div>
         {trend && !isLoading && (
           <div className={cn(
@@ -52,16 +53,16 @@ export function MetricCard({
       </div>
 
       <div className="space-y-1">
-        <p className="text-[10px] font-black text-stone-400 uppercase tracking-[0.15em]">{title}</p>
+        <p className="text-[9px] sm:text-[10px] font-black text-stone-400 uppercase tracking-wide sm:tracking-[0.15em]">{title}</p>
         {isLoading ? (
           <div className="h-10 w-24 bg-stone-100 animate-pulse rounded-2xl" />
         ) : (
-          <h3 className="text-4xl font-black tracking-tighter text-black">
+          <h3 className="text-2xl sm:text-4xl font-black tracking-tighter text-black">
             {typeof value === 'number' ? value.toLocaleString() : value}
           </h3>
         )}
         {subtitle && !isLoading && (
-          <p className="text-[10px] font-bold text-stone-300 uppercase tracking-tighter mt-1">{subtitle}</p>
+          <p className="text-[9px] sm:text-[10px] font-bold text-stone-300 uppercase tracking-tighter mt-1">{subtitle}</p>
         )}
       </div>
       

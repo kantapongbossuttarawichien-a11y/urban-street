@@ -6,15 +6,17 @@ export const authOptions: NextAuthOptions = {
     CredentialsProvider({
       name: "Credentials",
       credentials: {
-        email: { label: "Email", type: "email", placeholder: "admin@example.com" },
+        email: { label: "Username", type: "text", placeholder: "admin" },
         password: { label: "Password", type: "password" }
       },
       async authorize(credentials) {
         const validUsername = process.env.ADMIN_USERNAME || "admin";
         const validPassword = process.env.ADMIN_PASSWORD || "admin1234";
 
+        const inputUsername = credentials?.email;
+
         if (
-          credentials?.email === validUsername && 
+          inputUsername === validUsername && 
           credentials?.password === validPassword
         ) {
           return {

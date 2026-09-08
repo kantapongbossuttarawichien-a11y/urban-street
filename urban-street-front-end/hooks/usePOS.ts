@@ -1,176 +1,187 @@
-import { useState, useEffect, useMemo, useRef, useCallback } from "react";
-import { MenuItem } from "@/types";
+import { useCallback, useEffect, useMemo, useState } from "react";
+import { MenuItem, OfflineOrder } from "@/types";
 import { sheetyApi } from "@/lib/api";
-import { arrayMove } from "@dnd-kit/sortable";
+import { useDataCache } from "@/components/DataCacheProvider";
+import { useNativeNavigation } from "@/components/NativeNavigationContext";
+import { useMenuOrderSync } from "./useMenuOrderSync";
+
+const getOfflineQueue = (): OfflineOrder[] => {
+  if (typeof window === "undefined") return [];
+  try {
+    const raw = localStorage.getItem("offline_orders");
+    return raw ? JSON.parse(raw) : [];
+  } catch {
+    return [];
+  }
+};
+
+const setOfflineQueue = (queue: OfflineOrder[]) => {
+  if (typeof window === "undefined") return;
+  try {
+    localStorage.setItem("offline_orders", JSON.stringify(queue));
+  } catch (error) {
+    console.error("Failed to write to localStorage", error);
+  }
+};
 
 export function usePOS() {
-  const [menus, setMenus] = useState<MenuItem[]>([]);
+  const { activeTab } = useNativeNavigation();
+  const {
+    menus,
+    dailyStats,
+    isMenusInitialLoading,
+    isDailyStatsInitialLoading,
+    refreshMenus,
+    refreshDailyStats,
+    replaceMenus,
+    replaceDailyStats,
+    invalidateSales,
+  } = useDataCache();
   const [cart, setCart] = useState<MenuItem[]>([]);
   const [cartReady, setCartReady] = useState(false);
+  const [isSaving, setIsSaving] = useState(false);
+  const [pendingSyncCount, setPendingSyncCount] = useState(0);
+  const { reorderMenus } = useMenuOrderSync();
+
   useEffect(() => {
     try {
-      const saved = JSON.parse(sessionStorage.getItem('urban-cart') || '[]');
-      if (Array.isArray(saved) && saved.every(item => item && typeof item.name === 'string' && typeof item.price === 'number')) setCart(saved);
-    } catch { /* Ignore unavailable storage or an invalid draft. */ }
+      const saved = JSON.parse(sessionStorage.getItem("urban-cart") || "[]");
+      if (Array.isArray(saved) && saved.every(item => item && typeof item.name === "string" && typeof item.price === "number")) {
+        setCart(saved);
+      }
+    } catch {
+      // Keep the POS usable when storage is unavailable or corrupt.
+    }
     setCartReady(true);
   }, []);
+
   useEffect(() => {
     if (!cartReady) return;
-    try { sessionStorage.setItem('urban-cart', JSON.stringify(cart)); } catch { /* Keep the in-memory cart usable. */ }
+    try {
+      sessionStorage.setItem("urban-cart", JSON.stringify(cart));
+    } catch {
+      // The in-memory cart remains usable when storage is unavailable.
+    }
   }, [cart, cartReady]);
-  const [dailyRevenue, setDailyRevenue] = useState(0);
-  const [isLoading, setIsLoading] = useState(true);
-  const [pendingSyncCount, setPendingSyncCount] = useState(0);
 
-  // Refs for managing Sync Queue (prevent race conditions)
-  const isSyncingOrder = useRef(false);
-  const nextSyncItems = useRef<MenuItem[] | null>(null);
+  const total = useMemo(
+    () => cart.reduce((accumulator, item) => accumulator + item.price, 0),
+    [cart],
+  );
 
-  const total = useMemo(() => cart.reduce((acc, item) => acc + item.price, 0), [cart]);
+  const fetchMenus = useCallback(
+    () => refreshMenus({ force: true }),
+    [refreshMenus],
+  );
 
-  const fetchMenus = useCallback(async () => {
-    try {
-      const fetchedMenus = await sheetyApi.getMenus();
-      if (fetchedMenus.length > 0) setMenus(fetchedMenus);
-    } catch (e) {
-      console.error("Fetch menus failed", e);
-    }
-  }, []);
-
-  const fetchStats = useCallback(async () => {
-    try {
-      const stats = await sheetyApi.getDailyStats();
-      setDailyRevenue(stats.total);
-    } catch (e) {
-      console.error("Fetch stats failed", e);
-    }
-  }, []);
-
-  const attemptSync = useCallback(async (queue: { items: MenuItem[] }[]) => {
+  const attemptSync = useCallback(async (queue: OfflineOrder[]) => {
     if (queue.length === 0) return;
-    
-    console.log(`Attempting to sync ${queue.length} pending orders...`);
+
+    const remainingQueue: OfflineOrder[] = [];
     let successfulCount = 0;
-    const remainingQueue = [];
 
     for (const order of queue) {
       try {
         await sheetyApi.createOrder(order.items);
         successfulCount++;
-      } catch (err) {
-        console.error("Sync failed for order", err);
+      } catch (error) {
+        console.error("Sync failed", error);
         remainingQueue.push(order);
       }
     }
 
-    localStorage.setItem("offline_orders", JSON.stringify(remainingQueue));
+    setOfflineQueue(remainingQueue);
     setPendingSyncCount(remainingQueue.length);
-    
+
     if (successfulCount > 0) {
-      await fetchStats();
+      invalidateSales();
+      await refreshDailyStats({ force: true });
     }
-  }, [fetchStats]);
+  }, [invalidateSales, refreshDailyStats]);
 
   useEffect(() => {
-    const init = async () => {
-      setIsLoading(true);
-      await Promise.all([fetchMenus(), fetchStats()]);
+    if (activeTab !== "pos") return;
 
-      const offlineQueue = JSON.parse(localStorage.getItem("offline_orders") || "[]");
+    let isCurrent = true;
+
+    const loadActiveScreen = async () => {
+      await Promise.all([refreshMenus(), refreshDailyStats()]);
+      if (!isCurrent) return;
+
+      const offlineQueue = getOfflineQueue();
       setPendingSyncCount(offlineQueue.length);
-      
+
       if (offlineQueue.length > 0) {
-        attemptSync(offlineQueue);
+        void attemptSync(offlineQueue);
       }
-      setIsLoading(false);
     };
-    init();
-  }, [fetchMenus, fetchStats, attemptSync]);
+
+    void loadActiveScreen();
+
+    return () => {
+      isCurrent = false;
+    };
+  }, [activeTab, attemptSync, refreshDailyStats, refreshMenus]);
 
   const addToCart = (item: MenuItem) => {
-    setCart((prev) => [...prev, item]);
+    setCart((currentCart) => [...currentCart, item]);
   };
 
-  const syncMenuOrder = async (newItems: MenuItem[]) => {
-    if (isSyncingOrder.current) {
-      nextSyncItems.current = newItems;
-      return;
-    }
-
-    isSyncingOrder.current = true;
-    try {
-      for (let i = 0; i < newItems.length; i++) {
-        const item = newItems[i];
-        const targetOrder = i + 1;
-        
-        if (item.orderIndex !== targetOrder) {
-          await sheetyApi.updateMenuItem(Number(item.id), { orderIndex: targetOrder });
-          item.orderIndex = targetOrder;
-        }
-      }
-    } catch (e) {
-      console.error("Order sync failed", e);
-    } finally {
-      isSyncingOrder.current = false;
-      if (nextSyncItems.current) {
-        const itemsToSync = nextSyncItems.current;
-        nextSyncItems.current = null;
-        syncMenuOrder(itemsToSync);
-      }
-    }
+  const removeFromCart = (index: number) => {
+    setCart((currentCart) => currentCart.filter((_, itemIndex) => itemIndex !== index));
   };
 
   const handleDragEnd = (activeId: string | number, overId: string | number) => {
-    if (activeId !== overId) {
-      setMenus((items) => {
-        const oldIndex = items.findIndex((i) => i.id === activeId);
-        const newIndex = items.findIndex((i) => i.id === overId);
-        const newItems = arrayMove(items, oldIndex, newIndex);
-        syncMenuOrder(newItems);
-        return newItems;
-      });
+    if (activeId === overId) return;
+
+    const reorderedMenus = reorderMenus(menus, activeId, overId);
+    if (reorderedMenus !== menus) {
+      replaceMenus(reorderedMenus);
     }
   };
 
   const saveOrder = async () => {
     if (cart.length === 0) return;
-    
-    setIsLoading(true);
-    const orderData = { items: cart, total: total };
+
+    setIsSaving(true);
+    const orderData: OfflineOrder = { items: cart, total };
 
     try {
       await sheetyApi.createOrder(orderData.items);
-      setDailyRevenue(prev => prev + total);
+      replaceDailyStats({
+        total: dailyStats.total + total,
+        count: dailyStats.count + cart.length,
+      });
       setCart([]);
-      
-      const offlineQueue = JSON.parse(localStorage.getItem("offline_orders") || "[]");
-      if (offlineQueue.length > 0) attemptSync(offlineQueue);
-      
+      invalidateSales();
+
+      const offlineQueue = getOfflineQueue();
+      if (offlineQueue.length > 0) {
+        void attemptSync(offlineQueue);
+      }
+
+      void refreshDailyStats({ force: true });
       return { success: true, total };
-    } catch (err) {
-      console.error("Order save failed, saving to offline queue", err);
-      const offlineQueue = JSON.parse(localStorage.getItem("offline_orders") || "[]");
+    } catch (error) {
+      console.error("Order save failed, saving to offline queue", error);
+      const offlineQueue = getOfflineQueue();
       offlineQueue.push(orderData);
-      localStorage.setItem("offline_orders", JSON.stringify(offlineQueue));
-      
+      setOfflineQueue(offlineQueue);
       setPendingSyncCount(offlineQueue.length);
       setCart([]);
       return { success: false, offline: true };
     } finally {
-      setIsLoading(false);
+      setIsSaving(false);
     }
-  };
-
-  const removeFromCart = (index: number) => {
-    setCart((prev) => prev.filter((_, i) => i !== index));
   };
 
   return {
     menus,
     cart,
     total,
-    dailyRevenue,
-    isLoading,
+    dailyRevenue: dailyStats.total,
+    isLoading: isMenusInitialLoading || isDailyStatsInitialLoading,
+    isSaving,
     pendingSyncCount,
     addToCart,
     removeFromCart,
